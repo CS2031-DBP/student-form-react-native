@@ -1,50 +1,122 @@
-# Welcome to your Expo app 👋
+# Proyecto React Native con Expo 📱
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Este es un proyecto de introducción para aprender React Native con [Expo](https://expo.dev). El proyecto incluye un formulario básico para crear estudiantes y está diseñado para enseñar los conceptos fundamentales de desarrollo móvil.
 
-## Get started
+## Requisitos previos
 
-1. Install dependencies
+- Node.js (versión 16 o superior)
+- npm o yarn
+- Expo CLI (se instalará automáticamente)
+
+## Instalación y configuración
+
+1. **Clona o descarga este repositorio**
+
+2. **Instala las dependencias**
 
    ```bash
    npm install
    ```
 
-2. Start the app
+3. **Inicia el servidor de desarrollo**
 
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+## Opciones para ejecutar la aplicación
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Una vez que ejecutes `npx expo start`, verás un código QR y varias opciones:
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Opción 1: Expo Go (Recomendado para principiantes)
+- Descarga la app **Expo Go** desde:
+  - [App Store (iOS)](https://apps.apple.com/app/expo-go/id982107779)
+  - [Google Play (Android)](https://play.google.com/store/apps/details?id=host.exp.exponent)
+- Escanea el código QR con la cámara de tu teléfono (iOS) o con la app Expo Go (Android)
 
-## Get a fresh project
+### Opción 2: Simuladores
+- **iOS Simulator**: Presiona `i` en la terminal (requiere macOS y Xcode)
+- **Android Emulator**: Presiona `a` en la terminal (requiere Android Studio)
 
-When you're ready, run:
+### Opción 3: Navegador web
+- Presiona `w` en la terminal para abrir en el navegador
 
-```bash
-npm run reset-project
+## Estructura del proyecto
+
+```
+proyecto-react-native/
+├── app/
+│   └── (tabs)/
+│       └── index.tsx          # Pantalla principal con formulario
+├── components/                # Componentes reutilizables
+├── assets/                   # Imágenes y fuentes
+├── constants/                # Constantes de la aplicación
+└── hooks/                    # Hooks personalizados
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Características del proyecto
 
-## Learn more
+- ✅ Formulario completo para crear estudiantes
+- ✅ Validación de campos
+- ✅ Interfaz responsive
+- ✅ Navegación por pestañas
+- ✅ Componentes reutilizables
+- ✅ TypeScript para mayor seguridad
 
-To learn more about developing your project with Expo, look at the following resources:
+## Conceptos que aprenderás
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- **Componentes básicos**: View, Text, TextInput, TouchableOpacity
+- **Estado y hooks**: useState para manejar datos del formulario
+- **Estilos**: StyleSheet y diseño responsive
+- **Navegación**: Sistema de pestañas con Expo Router
+- **Formularios**: Manejo de inputs y validación
+- **TypeScript**: Tipado estático en React Native
 
-## Join the community
+## Comandos útiles
 
-Join our community of developers creating universal apps.
+```bash
+# Iniciar el proyecto
+npx expo start
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+# Limpiar caché
+npx expo start --clear
+
+# Instalar nuevas dependencias
+npm install [nombre-del-paquete]
+
+# Generar build para producción
+npx expo build
+```
+
+## Recursos adicionales
+
+- [Documentación de Expo](https://docs.expo.dev/)
+- [Documentación de React Native](https://reactnative.dev/)
+- [Tutorial de Expo](https://docs.expo.dev/tutorial/introduction/)
+- [Componentes de React Native](https://reactnative.dev/docs/components-and-apis)
+
+## Problemas comunes
+
+### El código QR no funciona
+- Asegúrate de que tu teléfono y computadora estén en la misma red WiFi
+- Intenta reiniciar el servidor con `npx expo start --clear`
+
+### Error de dependencias
+- Elimina `node_modules` y ejecuta `npm install` nuevamente
+- Verifica que tengas Node.js actualizado
+
+### Problemas con simuladores
+- **iOS**: Asegúrate de tener Xcode instalado y actualizado
+- **Android**: Verifica que Android Studio esté configurado correctamente
+
+## Próximos pasos
+
+Una vez que domines este proyecto básico, puedes explorar:
+
+- Navegación entre pantallas
+- Integración con APIs
+- Almacenamiento local
+- Notificaciones push
+- Publicación en las tiendas de aplicaciones
+
+¡Feliz aprendizaje! 🚀
