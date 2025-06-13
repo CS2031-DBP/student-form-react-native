@@ -26,11 +26,9 @@ export default function LoginScreen() {
     try {
       const response = await Login(email, password);
       
-      // Store the token securely
       if (response.token) {
         await SecureStore.setItemAsync("authToken", response.token);
         
-        // Navigate to the main app
         router.replace("/(tabs)");
       } else {
         Alert.alert("Error", "No token received from server");
