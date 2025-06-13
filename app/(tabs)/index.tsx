@@ -32,6 +32,14 @@ export default function HomeScreen() {
         />
       }
     >
+      {/* <TouchableOpacity style={styles.button}>
+        <Link href="/no_existe">
+          <ThemedText style={styles.buttonText}>
+            Go to Non-Existent Page
+          </ThemedText>
+        </Link>
+      </TouchableOpacity> */}
+
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Create Student</ThemedText>
         <HelloWave />

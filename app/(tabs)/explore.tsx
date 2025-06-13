@@ -1,130 +1,189 @@
-import { Image } from "expo-image";
-import { Platform, StyleSheet } from "react-native";
-
-import { Collapsible } from "@/components/Collapsible";
-import { ExternalLink } from "@/components/ExternalLink";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import { IconSymbol } from "@/components/ui/IconSymbol";
+import { Ionicons } from "@expo/vector-icons";
+import { Pedometer } from "expo-sensors";
+import { useEffect, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
 
 export default function TabTwoScreen() {
+  const [isPedometerAvailable, setIsPedometerAvailable] = useState("checking");
+  const [pastStepCount, setPastStepCount] = useState(0);
+  const [currentStepCount, setCurrentStepCount] = useState(0);
+  const [sessionStartSteps, setSessionStartSteps] = useState(0);
+
+  const subscribe = async () => {
+    const isAvailable = await Pedometer.isAvailableAsync();
+    setIsPedometerAvailable(String(isAvailable));
+
+    if (isAvailable) {
+      // Get past 24 hours step count
+      const end = new Date();
+      const start = new Date();
+      start.setDate(end.getDate() - 1);
+
+      const pastStepCountResult = await Pedometer.getStepCountAsync(start, end);
+      if (pastStepCountResult) {
+        setPastStepCount(pastStepCountResult.steps);
+      }
+
+      // Get current total steps for today to establish baseline
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const currentTotalResult = await Pedometer.getStepCountAsync(
+        today,
+        new Date()
+      );
+      if (currentTotalResult) {
+        const baselineSteps = currentTotalResult.steps;
+        setSessionStartSteps(baselineSteps);
+        setCurrentStepCount(baselineSteps);
+
+        // Watch for step count changes
+        return Pedometer.watchStepCount((result) => {
+          // Add the new steps since subscription started to our baseline
+          setCurrentStepCount(baselineSteps + result.steps);
+        });
+      } else {
+        // If we can't get baseline, just use the watch count
+        return Pedometer.watchStepCount((result) => {
+          setCurrentStepCount(result.steps);
+        });
+      }
+    }
+  };
+
+  useEffect(() => {
+    let subscription: Pedometer.Subscription | undefined;
+    let refreshInterval: ReturnType<typeof setInterval> | undefined;
+
+    const setupPedometer = async () => {
+      try {
+        subscription = await subscribe();
+
+        // Set up periodic refresh every 30 seconds to ensure accuracy
+        refreshInterval = setInterval(async () => {
+          try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const currentTotalResult = await Pedometer.getStepCountAsync(
+              today,
+              new Date()
+            );
+            if (currentTotalResult) {
+              setCurrentStepCount(currentTotalResult.steps);
+            }
+          } catch (error) {
+            console.error("Error refreshing step count:", error);
+          }
+        }, 30000); // Refresh every 30 seconds
+      } catch (error) {
+        console.error("Error setting up pedometer:", error);
+        setIsPedometerAvailable("error");
+      }
+    };
+
+    setupPedometer();
+
+    return () => {
+      subscription?.remove();
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+    };
+  }, []);
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: "#D0D0D0", dark: "#353636" }}
       headerImage={
-        <IconSymbol
+        <Ionicons
           size={310}
           color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
+          name="walk"
           style={styles.headerImage}
         />
       }
     >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>
-        This app includes example code to help you get started.
-      </ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}
-          and{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{" "}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the
-          web version, press <ThemedText type="defaultSemiBold">w</ThemedText>{" "}
-          in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the{" "}
-          <ThemedText type="defaultSemiBold">@2x</ThemedText> and{" "}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to
-          provide files for different screen densities
-        </ThemedText>
-        <Image
-          source={require("@/assets/images/react-logo.png")}
-          style={{ alignSelf: "center" }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText>{" "}
-          to see how to load{" "}
-          <ThemedText style={{ fontFamily: "SpaceMono" }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{" "}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook
-          lets you inspect what the user&apos;s current color scheme is, and so
-          you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{" "}
-          <ThemedText type="defaultSemiBold">
-            components/HelloWave.tsx
-          </ThemedText>{" "}
-          component uses the powerful{" "}
-          <ThemedText type="defaultSemiBold">
-            react-native-reanimated
-          </ThemedText>{" "}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The{" "}
-              <ThemedText type="defaultSemiBold">
-                components/ParallaxScrollView.tsx
-              </ThemedText>{" "}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
+      <View style={styles.container}>
+        <Text style={styles.title}>Step Counter</Text>
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>Pedometer Available</Text>
+            <Text style={styles.statValue}>{isPedometerAvailable}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>Steps (Last 24 Hours)</Text>
+            <Text style={styles.statValue}>
+              {pastStepCount.toLocaleString()}
+            </Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>Steps Today</Text>
+            <Text style={styles.statValue}>
+              {currentStepCount.toLocaleString()}
+            </Text>
+          </View>
+        </View>
+        <Text style={styles.encouragement}>
+          Keep walking to see your step count increase! 🚶‍♂️
+        </Text>
+      </View>
     </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: "#808080",
-    bottom: -90,
-    left: -35,
-    position: "absolute",
+  container: {
+    flex: 1,
+    padding: 20,
+    alignItems: "center",
   },
-  titleContainer: {
-    flexDirection: "row",
-    gap: 8,
+  headerImage: {
+    marginTop: 50,
+    alignSelf: "center",
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 30,
+    textAlign: "center",
+  },
+  statsContainer: {
+    width: "100%",
+    marginBottom: 30,
+  },
+  statItem: {
+    backgroundColor: "#f5f5f5",
+    padding: 20,
+    marginBottom: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  statLabel: {
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 5,
+    textAlign: "center",
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#007AFF",
+    textAlign: "center",
+  },
+  encouragement: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    fontStyle: "italic",
+    lineHeight: 24,
   },
 });
