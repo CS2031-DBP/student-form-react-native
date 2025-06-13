@@ -15,7 +15,6 @@ export default function TabTwoScreen() {
     setIsPedometerAvailable(String(isAvailable));
 
     if (isAvailable) {
-      // Get past 24 hours step count
       const end = new Date();
       const start = new Date();
       start.setDate(end.getDate() - 1);
@@ -25,7 +24,6 @@ export default function TabTwoScreen() {
         setPastStepCount(pastStepCountResult.steps);
       }
 
-      // Get current total steps for today to establish baseline
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const currentTotalResult = await Pedometer.getStepCountAsync(
@@ -37,13 +35,10 @@ export default function TabTwoScreen() {
         setSessionStartSteps(baselineSteps);
         setCurrentStepCount(baselineSteps);
 
-        // Watch for step count changes
         return Pedometer.watchStepCount((result) => {
-          // Add the new steps since subscription started to our baseline
           setCurrentStepCount(baselineSteps + result.steps);
         });
       } else {
-        // If we can't get baseline, just use the watch count
         return Pedometer.watchStepCount((result) => {
           setCurrentStepCount(result.steps);
         });

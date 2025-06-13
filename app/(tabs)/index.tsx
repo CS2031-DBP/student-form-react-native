@@ -1,25 +1,115 @@
 import { Image } from "expo-image";
+import { router } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import { useState } from "react";
-import { StyleSheet, TextInput, TouchableOpacity } from "react-native";
+import { Alert, StyleSheet, TextInput, TouchableOpacity } from "react-native";
 
 import { HelloWave } from "@/components/HelloWave";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { createStudent } from "../../api";
 
 export default function HomeScreen() {
   const [formData, setFormData] = useState({
-    firstname: "John",
-    lastname: "Doe",
-    email: "john.doe@example.com",
-    phone: "+1234567890",
-    age: "20",
-    description: "Computer Science Student",
-    password: "securePassword123",
+    firstname: "",
+    lastname: "",
+    email: "",
+    phone: "",
+    age: "",
+    description: "",
+    password: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async () => {
-    alert(JSON.stringify(formData));
+    // Validate form data
+    if (!formData.firstname || !formData.lastname || !formData.email || 
+        !formData.phone || !formData.age || !formData.password) {
+      Alert.alert("Error", "Please fill in all required fields");
+      return;
+    }
+
+    // Validate age is a number
+    const ageNumber = parseInt(formData.age);
+    if (isNaN(ageNumber) || ageNumber <= 0) {
+      Alert.alert("Error", "Please enter a valid age");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Get the stored token
+      const token = await SecureStore.getItemAsync("authToken");
+      
+      if (!token) {
+        Alert.alert("Error", "No authentication token found. Please login again.");
+        router.replace("/");
+        return;
+      }
+
+      // Prepare student data
+      const studentData = {
+        firstname: formData.firstname,
+        lastname: formData.lastname,
+        email: formData.email,
+        phone: formData.phone,
+        age: ageNumber,
+        description: formData.description,
+        password: formData.password,
+      };
+
+      // Submit to API
+      const response = await createStudent(studentData, token);
+      
+      Alert.alert(
+        "Success", 
+        "Student created successfully!",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              // Reset form
+              setFormData({
+                firstname: "",
+                lastname: "",
+                email: "",
+                phone: "",
+                age: "",
+                description: "",
+                password: "",
+              });
+            }
+          }
+        ]
+      );
+      
+    } catch (error: any) {
+      console.error("Error creating student:", error);
+      
+      if (error.response?.status === 401) {
+        Alert.alert(
+          "Authentication Error", 
+          "Your session has expired. Please login again.",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                SecureStore.deleteItemAsync("authToken");
+                router.replace("/");
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert(
+          "Error", 
+          error.response?.data?.message || "Failed to create student. Please try again."
+        );
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -47,7 +137,7 @@ export default function HomeScreen() {
 
       <ThemedView style={styles.formContainer}>
         <ThemedView style={styles.inputContainer}>
-          <ThemedText style={styles.label}>First Name</ThemedText>
+          <ThemedText style={styles.label}>First Name *</ThemedText>
           <TextInput
             style={styles.input}
             value={formData.firstname}
@@ -59,7 +149,7 @@ export default function HomeScreen() {
         </ThemedView>
 
         <ThemedView style={styles.inputContainer}>
-          <ThemedText style={styles.label}>Last Name</ThemedText>
+          <ThemedText style={styles.label}>Last Name *</ThemedText>
           <TextInput
             style={styles.input}
             value={formData.lastname}
@@ -71,18 +161,19 @@ export default function HomeScreen() {
         </ThemedView>
 
         <ThemedView style={styles.inputContainer}>
-          <ThemedText style={styles.label}>Email</ThemedText>
+          <ThemedText style={styles.label}>Email *</ThemedText>
           <TextInput
             style={styles.input}
             value={formData.email}
             onChangeText={(text) => setFormData({ ...formData, email: text })}
             placeholder="example@email.com"
             keyboardType="email-address"
+            autoCapitalize="none"
           />
         </ThemedView>
 
         <ThemedView style={styles.inputContainer}>
-          <ThemedText style={styles.label}>Phone</ThemedText>
+          <ThemedText style={styles.label}>Phone *</ThemedText>
           <TextInput
             style={styles.input}
             value={formData.phone}
@@ -93,7 +184,7 @@ export default function HomeScreen() {
         </ThemedView>
 
         <ThemedView style={styles.inputContainer}>
-          <ThemedText style={styles.label}>Age</ThemedText>
+          <ThemedText style={styles.label}>Age *</ThemedText>
           <TextInput
             style={styles.input}
             value={formData.age}
@@ -118,7 +209,7 @@ export default function HomeScreen() {
         </ThemedView>
 
         <ThemedView style={styles.inputContainer}>
-          <ThemedText style={styles.label}>Password</ThemedText>
+          <ThemedText style={styles.label}>Password *</ThemedText>
           <TextInput
             style={styles.input}
             value={formData.password}
@@ -130,8 +221,24 @@ export default function HomeScreen() {
           />
         </ThemedView>
 
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <ThemedText style={styles.buttonText}>Create Student</ThemedText>
+        <TouchableOpacity 
+          style={[styles.button, isLoading && styles.buttonDisabled]} 
+          onPress={handleSubmit}
+          disabled={isLoading}
+        >
+          <ThemedText style={styles.buttonText}>
+            {isLoading ? "Creating Student..." : "Create Student"}
+          </ThemedText>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.logoutButton} 
+          onPress={async () => {
+            await SecureStore.deleteItemAsync("authToken");
+            router.replace("/");
+          }}
+        >
+          <ThemedText style={styles.logoutButtonText}>Logout</ThemedText>
         </TouchableOpacity>
       </ThemedView>
     </ParallaxScrollView>
@@ -175,10 +282,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 8,
   },
+  buttonDisabled: {
+    backgroundColor: "#94a3b8",
+  },
   buttonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "600",
+  },
+  logoutButton: {
+    backgroundColor: "#dc2626",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 16,
+  },
+  logoutButtonText: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "500",
   },
   reactLogo: {
     height: 178,
