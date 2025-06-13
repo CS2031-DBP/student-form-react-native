@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // TODO: Cambiar a la url por la de tu IP
-const BASE_URL = "http://172.20.10.5:8080";
+const BASE_URL = "http://172.20.10.3:8080";
 
 const api = axios.create({
   baseURL: BASE_URL,
